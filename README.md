@@ -110,7 +110,10 @@ conda activate pytorch
 （请在Pytorch官网获得适合PC的安装命令）
 
 # 安装 ultralytics
-conda install ultralytics
+conda install -c conda-forge ultralytics
+
+# ultralytics官方文档
+https://docs.ultralytics.com/zh
 
 # 其他依赖
 conda install h5py matplotlib numpy pillow
