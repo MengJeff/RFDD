@@ -4,7 +4,7 @@
 模型:   YOLOv8m (25.9M 参数)
 GPU:    NVIDIA GeForce RTX 4060 Laptop (8GB VRAM)
 输入:   640×640 (从 2021×2048 自动缩放)
-Batch:  16
+Batch:  8 或 16（根据显存调整）
 Epoch:  100
 学习率: lr0=0.001, cosine schedule
 优化器: AdamW
@@ -47,11 +47,11 @@ NUM_CLASSES = 6
 CONFIG = {
     "model": "yolov8m.pt",      # 选取模型名称YOLOv8m.pt
     "imgsz": 640,               # 输入尺寸，训练时会自动缩放原图到640x640
-    "batch": 16,                # 批量大小，受GPU显存限制，RTX 4060 Laptop 8GB通常可用8
+    "batch": 8,                 # 批量大小，受GPU显存限制，RTX 4060 Laptop 8GB通常可用8或16
     "epochs": 100,              # 迭代次数
     "lr0": 0.001,               # 学习率
     "patience": 20,             # 早停轮数，若验证指标不提升超过20轮则停止训练
-    "workers": 4,               # 数据加载器的工作进程数
+    "workers": 1,               # 数据加载器的工作进程数，受内存限制
     "device": 0,                # GPU 0，选用电脑第一个GPU，如果没有GPU则自动使用CPU
     "project": str(OUTPUT_DIR / "runs_m"), # 训练结果保存目录
     "name": "yolov8m_rfdd",            # 训练结果子目录名称
@@ -139,6 +139,7 @@ def evaluate_test(model, yaml_path):
         split='test',
         imgsz=CONFIG['imgsz'],
         batch=CONFIG['batch'],
+        workers=CONFIG['workers'],
         device=CONFIG['device'],
         project=CONFIG['project'],
         name=CONFIG['name'] + '_test_eval',
