@@ -47,11 +47,11 @@ NUM_CLASSES = 6
 CONFIG = {
     "model": "yolov8s.pt",      # 选取模型名称YOLOv8 small
     "imgsz": 640,               # 输入尺寸，训练时会自动缩放原图到640x640
-    "batch": 16,                # 批量大小，受GPU显存限制，RTX 4060 Laptop 8GB通常可用8或16
+    "batch": 8,                # 批量大小，受GPU显存限制，RTX 4060 Laptop 8GB通常可用8或16
     "epochs": 100,              # 迭代次数
     "lr0": 0.001,               # 学习率
     "patience": 20,             # 早停轮数，若验证指标不提升超过20轮则停止训练
-    "workers": 4,               # 数据加载器的工作进程数
+    "workers": 1,               # 数据加载器的工作进程数
     "device": 0,                # GPU 0，选用电脑第一个GPU，如果没有GPU则自动使用CPU
     "project": str(OUTPUT_DIR / "runs_s"), # 训练结果保存目录
     "name": "yolov8s_rfdd",               # 训练结果子目录名称
@@ -139,6 +139,7 @@ def evaluate_test(model, yaml_path):
         split='test',
         imgsz=CONFIG['imgsz'],
         batch=CONFIG['batch'],
+        workers=CONFIG['workers'],
         device=CONFIG['device'],
         project=CONFIG['project'],
         name=CONFIG['name'] + '_test_eval',
