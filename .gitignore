@@ -1,2 +1,6 @@
 RFDD_datasets/test/
 RFDD_datasets/train&val/
+Data_Prep/
+outputs_task1/
+outputs_task2_yolov8m/
+outputs_task2_yolov8s/
