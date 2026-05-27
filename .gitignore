@@ -1,8 +1,9 @@
-RFDD_datasets/test/
-RFDD_datasets/train&val/
-Data_Prep/
+*.pt
 outputs_task1/
 outputs_task2_yolov8m/
 outputs_task2_yolov8s/
+outputs_task3_fasterrcnn_resnet50_fpn_v2/
 .vscode/
-*.pt
+Data_Prep/
+RFDD_datasets/test/
+RFDD_datasets/train&val/
