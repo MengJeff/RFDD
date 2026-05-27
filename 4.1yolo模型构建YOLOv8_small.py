@@ -4,7 +4,7 @@
 模型:   YOLOv8s (11.2M 参数)
 GPU:    NVIDIA GeForce RTX 4060 Laptop (8GB VRAM)
 输入:   640×640 (从 2021×2048 自动缩放)
-Batch:  8 或 16（根据显存调整）
+Batch:  8 或 16 (根据显存调整)
 Epoch:  100
 学习率: lr0=0.001, cosine schedule
 优化器: AdamW
@@ -314,7 +314,7 @@ def main():
     # 1. 环境检查
     check_environment()
 
-    # 2. 检查数据集（应由数据集分类.py 创建）
+    # 2. 检查数据集 (应由数据集分类.py 创建)
     yaml_path = YOLO_ROOT / "RFDD.yaml"   # 关键路径配置，yolo模型通过.yaml文件加载数据集，运行前需要确保路径正确
     if not yaml_path.exists():
         print(f"  [错误] 未找到 {yaml_path}")
@@ -350,8 +350,15 @@ def main():
     print(f"  类别数:       {NUM_CLASSES}")
     print(f"  GPU:          RTX 4060 Laptop (8GB)")
 
-    # 3. 训练
-    model, train_results = train_yolo(yaml_path)
+    # 3. 训练模型 / 加载已有模型
+    from ultralytics import YOLO
+    best_pt = Path(CONFIG['project']) / CONFIG['name'] / 'weights' / 'best.pt'
+    if best_pt.exists():
+        print(f"\n  检测到已有权重: {best_pt}")
+        print("  跳过训练，直接加载模型进行评估。")
+        model = YOLO(str(best_pt))
+    else:
+        model, _ = train_yolo(yaml_path)
 
     # 4. 测试集评估
     evaluate_test(model, yaml_path)

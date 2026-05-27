@@ -19,12 +19,12 @@ DATASETS_DIR = BASE_DIR / "RFDD_datasets"
 WORK_DIR = BASE_DIR / "Data_Prep"
 
 # ========== 全局模型变量（切换模型时只需修改此处） ==========
-MODEL_NAME = "yolov8m"      # 模型名称，如 yolov8s / yolov8m / yolov8l
+MODEL_NAME = "yolov8s"      # 模型名称，如 yolov8s / yolov8m / yolov8l
 MODEL_SIZE = MODEL_NAME[-1]  # 模型尺寸后缀，如 s / m / l
 # ===========================================================
 
 # 训练好的模型权重
-BEST_PT = WORK_DIR / f"runs_{MODEL_SIZE}" / f"{MODEL_NAME}_rfdd" / "weights" / "best.pt" # 模型权重路径，需与训练脚本保持一致
+BEST_PT = BASE_DIR / f"outputs_task2_{MODEL_NAME}" / f"runs_{MODEL_SIZE}" / f"{MODEL_NAME}_rfdd" / "weights" / "best.pt"  # 模型权重路径，需与训练脚本保持一致
 
 # 测试数据原始路径
 TEST_IMG_SRC = DATASETS_DIR / "test" / "images"

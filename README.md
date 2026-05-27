@@ -56,10 +56,10 @@ RFDD/
 ├── 5.yolo模型调用.py                    # 已训练模型推理与评估
 ├── 6.测试集可视化.py                    # 测试集导入 YOLO 目录工具
 ├── 要求.txt                             # 作业要求说明
-├── RFDD_datasets/                       # 原始数据集
+├── RFDD_datasets/                       # 原始数据集（含占位符）
 │   ├── train&val/                       #   - 训练+验证集（HDF5 格式）
 │   └── test/                            #   - 测试集（PNG + YOLO TXT）
-├── Data_Prep/                           # 预处理后数据
+├── Data_Prep/                           # 预处理后数据（含占位符）
 │   ├── RFDD_clean/                      #   - 去重后的 H5 数据
 │   └── RFDD_Grouping/                   #   - YOLO 格式数据集（train/val/test）
 │       ├── RFDD.yaml                    #     YOLO 训练配置文件
@@ -68,15 +68,15 @@ RFDD/
 ├── outputs_task1/                       # 任务1 输出（可视化图表）
 ├── outputs_task2_yolov8s/               # YOLOv8s 训练输出
 │   ├── predictions/                     #   测试集检测结果
-│   └── runs_s/yolov8s_rfdd/            #   训练权重与指标
+│   └── runs_s/yolov8s_rfdd/            #   训练后生成的权重与指标
 ├── outputs_task2_yolov8m/               # YOLOv8m 训练输出
 │   ├── predictions/                     #   测试集检测结果
-│   └── runs_m/yolov8m_rfdd/            #   训练权重与指标
-├── 日志yolov8s训练.txt                  # YOLOv8s 训练日志
-├── 日志yolov8m训练.txt                  # YOLOv8m 训练日志
-├── yolov8s.pt                           # YOLOv8s COCO 预训练权重
-├── yolov8m.pt                           # YOLOv8m COCO 预训练权重
-└── yolo26n.pt                           # YOLOv26n 预训练权重
+│   └── runs_m/yolov8m_rfdd/            #   训练后生成的权重与指标
+├── 日志yolov8s训练.txt                  # YOLOv8s 训练日志（案例）
+├── 日志yolov8m训练.txt                  # YOLOv8m 训练日志（案例）
+├── yolov8s.pt                           # YOLOv8s COCO 预训练权重（运行脚本后自动下载）
+├── yolov8m.pt                           # YOLOv8m COCO 预训练权重（运行脚本后自动下载）
+└── yolo26n.pt                           # YOLOv26n 预训练权重（运行脚本后自动下载）
 ```
 
 ---
