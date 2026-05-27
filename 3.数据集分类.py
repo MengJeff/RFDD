@@ -36,8 +36,8 @@ YOLO_LABELS_TRAIN = YOLO_ROOT / "labels" / "train"
 YOLO_LABELS_VAL = YOLO_ROOT / "labels" / "val"
 YOLO_LABELS_TEST = YOLO_ROOT / "labels" / "test"
 
-CLASS_NAMES_EN = ["Deformed", "Missing", "Displaced",
-                   "Inverted", "Normal", "Fractured"]
+CLASS_NAMES_EN = ["Deformed", "Fractured", "Missing", 
+                  "Inverted", "Normal", "Displaced"]
 NUM_CLASSES = 6
 
 # 训练/验证拆分比例

@@ -39,8 +39,8 @@ YOLO_LABELS_TRAIN = YOLO_ROOT / "labels" / "train"
 YOLO_LABELS_VAL = YOLO_ROOT / "labels" / "val"
 YOLO_LABELS_TEST = YOLO_ROOT / "labels" / "test"
 
-CLASS_NAMES_EN = ["Deformed", "Missing", "Displaced",
-                   "Inverted", "Normal", "Fractured"]
+CLASS_NAMES_EN = ["Deformed", "Fractured", "Missing", 
+                  "Inverted", "Normal", "Displaced"]
 NUM_CLASSES = 6
 
 # 超参数
@@ -146,22 +146,46 @@ def evaluate_test(model, yaml_path):
         exist_ok=True,
     )
 
-    print(f"\n  {'='*45}")
-    print(f"  测试集指标汇总")
-    print(f"  {'='*45}")
+    # ----- 总体指标 -----
+    print(f"\n  {'─' * 45}")
+    print(f"  总体指标")
+    print(f"  {'─' * 45}")
     print(f"  mAP@0.5:       {metrics.box.map50:.4f}")
     print(f"  mAP@0.5:0.95:  {metrics.box.map:.4f}")
     print(f"  Precision (P): {metrics.box.mp:.4f}")
     print(f"  Recall (R):    {metrics.box.mr:.4f}")
 
-    # 每类别 AP@0.5
-    if hasattr(metrics.box, 'ap') and len(metrics.box.ap) > 0:
-        print(f"\n  各类别 AP@0.5:")
-        for i, ap in enumerate(metrics.box.ap):
-            if i < NUM_CLASSES:
-                print(f"    {CLASS_NAMES_EN[i]:>12s}: {ap:.4f}")
+    # ----- 各类别 AP@0.5 与 AP@0.5:0.95 -----
+    print(f"\n  {'─' * 45}")
+    print(f"  各类别 AP@0.5 与 AP@0.5:0.95")
+    print(f"  {'─' * 45}")
+    print(f"  {'类别':<16s} {'AP@0.5':>8s}  {'AP@0.5:0.95':>10s}")
+    print(f"  {'─' * 45}")
 
-    # 完整指标字典
+    ap50_list = getattr(metrics.box, 'ap50', None)
+    ap_list = getattr(metrics.box, 'ap', None)
+    for cid in range(NUM_CLASSES):
+        name = CLASS_NAMES_EN[cid]
+        val50 = ap50_list[cid] if ap50_list is not None and len(ap50_list) > cid else 0.0
+        val95 = ap_list[cid] if ap_list is not None and len(ap_list) > cid else 0.0
+        print(f"  {name:<16s} {val50:>8.4f}  {val95:>10.4f}")
+
+    # ----- 各类别 Precision / Recall -----
+    print(f"\n  {'─' * 45}")
+    print(f"  各类别 Precision / Recall")
+    print(f"  {'─' * 45}")
+    print(f"  {'类别':<16s} {'Precision':>10s}  {'Recall':>10s}")
+    print(f"  {'─' * 45}")
+
+    p_list = getattr(metrics.box, 'p', None)
+    r_list = getattr(metrics.box, 'r', None)
+    for cid in range(NUM_CLASSES):
+        name = CLASS_NAMES_EN[cid]
+        pv = p_list[cid] if p_list is not None and len(p_list) > cid else 0.0
+        rv = r_list[cid] if r_list is not None and len(r_list) > cid else 0.0
+        print(f"  {name:<16s} {pv:>10.4f}  {rv:>10.4f}")
+
+    # ----- 完整指标字典 -----
     try:
         rd = metrics.results_dict
         print(f"\n  详细指标:")
@@ -304,9 +328,34 @@ def benchmark_speed(model):
     print(f"  FPS:          {fps:.1f}")
 
 
+# ===================== 5. 日志模块 =====================
+
+def setup_logger():
+    """将后续所有 print 输出同时写入日志文件（UTF-8 编码）"""
+    import sys
+    from datetime import datetime
+
+    RESULT_DIR.mkdir(exist_ok=True)
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    log_path = RESULT_DIR / f"log_{CONFIG['model'].replace('.pt', '')}_{timestamp}.txt"
+
+    class Tee:
+        def __init__(self, f1, f2):
+            self.f1 = f1; self.f2 = f2
+        def write(self, data):
+            self.f1.write(data); self.f2.write(data)
+        def flush(self):
+            self.f1.flush(); self.f2.flush()
+
+    sys.stdout = Tee(sys.stdout, open(str(log_path), 'w', encoding='utf-8'))
+    print(f"  日志文件: {log_path}\n")
+
+
 # ===================== 主流程 =====================
 
 def main():
+    setup_logger()
+
     print("=" * 60)
     print("  任务 2: YOLOv8 — 铁路扣件缺陷检测")
     print("=" * 60)

@@ -32,11 +32,11 @@ OUTPUT_DIR.mkdir(exist_ok=True)
 
 CLASS_NAMES = {
     0: "变形 (Deformed)",
-    1: "缺失 (Missing)",
-    2: "位移 (Displaced)",
+    1: "断裂 (Fractured)",
+    2: "缺失 (Missing)",
     3: "反装 (Inverted)",
     4: "正常 (Normal)",
-    5: "断裂 (Fractured)",
+    5: "位移 (Displaced)",
 }
 NUM_CLASSES = 6
 
@@ -268,8 +268,8 @@ def plot_class_distribution(train_cnt, val_cnt, test_cnt, save_name="class_distr
     """绘制类别分布柱状图"""
     x = np.arange(NUM_CLASSES)
     width = 0.25
-    names_short = ["变形\nDeformed", "缺失\nMissing", "位移\nDisplaced",
-                   "反装\nInverted", "正常\nNormal", "断裂\nFractured"]
+    names_short = ["变形\nDeformed", "断裂\nFractured", "缺失\nMissing",
+                   "反装\nInverted", "正常\nNormal", "位移\nDisplaced"]
 
     fig, ax = plt.subplots(figsize=(12, 6))
     bars1 = ax.bar(x - width, train_cnt, width, label='训练集 (Train)', color='#5470c6')

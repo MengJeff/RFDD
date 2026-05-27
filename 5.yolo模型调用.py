@@ -40,8 +40,8 @@ RESULT_DIR = BASE_DIR / f"outputs_task2_{MODEL_NAME}"  # 评估结果保存目�
 RESULT_DIR.mkdir(exist_ok=True)
 
 CLASS_NAMES = {
-    0: "Deformed", 1: "Missing", 2: "Displaced",
-    3: "Inverted", 4: "Normal", 5: "Fractured",
+    0: "Deformed", 1: "Fractured", 2: "Missing",
+    3: "Inverted", 4: "Normal", 5: "Displaced",
 }
 # 推理参数
 CONFIG = {
