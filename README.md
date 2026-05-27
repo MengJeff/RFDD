@@ -47,36 +47,44 @@
 
 ```
 RFDD/
-├── 检查python环境.py                   # 环境检查：PyTorch/CUDA/ultralytics 版本
-├── 1.数据集预处理.py                    # 数据集去重（MD5 哈希）
-├── 2.图片读取.py                        # 任务1：数据加载、标注可视化、统计分析
-├── 3.数据集分类.py                      # 数据集划分与 YOLO 格式导出
-├── 4.1yolo模型构建YOLOv8_small.py      # 任务2：YOLOv8s 训练与评估
-├── 4.2yolo模型构建YOLOv8_m.py           # 任务2：YOLOv8m 训练与评估
-├── 5.yolo模型调用.py                    # 已训练模型推理与评估
-├── 6.测试集可视化.py                    # 测试集导入 YOLO 目录工具
-├── 要求.txt                             # 作业要求说明
-├── RFDD_datasets/                       # 原始数据集（含占位符）
-│   ├── train&val/                       #   - 训练+验证集（HDF5 格式）
-│   └── test/                            #   - 测试集（PNG + YOLO TXT）
-├── Data_Prep/                           # 预处理后数据（含占位符）
-│   ├── RFDD_clean/                      #   - 去重后的 H5 数据
-│   └── RFDD_Grouping/                   #   - YOLO 格式数据集（train/val/test）
-│       ├── RFDD.yaml                    #     YOLO 训练配置文件
-│       ├── images/                      #     PNG 图像
-│       └── labels/                      #     YOLO 格式 TXT 标注
-├── outputs_task1/                       # 任务1 输出（可视化图表）
-├── outputs_task2_yolov8s/               # YOLOv8s 训练输出
-│   ├── predictions/                     #   测试集检测结果
-│   └── runs_s/yolov8s_rfdd/            #   训练后生成的权重与指标
-├── outputs_task2_yolov8m/               # YOLOv8m 训练输出
-│   ├── predictions/                     #   测试集检测结果
-│   └── runs_m/yolov8m_rfdd/            #   训练后生成的权重与指标
-├── 日志yolov8s训练.txt                  # YOLOv8s 训练日志（案例）
-├── 日志yolov8m训练.txt                  # YOLOv8m 训练日志（案例）
-├── yolov8s.pt                           # YOLOv8s COCO 预训练权重（运行脚本后自动下载）
-├── yolov8m.pt                           # YOLOv8m COCO 预训练权重（运行脚本后自动下载）
-└── yolo26n.pt                           # YOLOv26n 预训练权重（运行脚本后自动下载）
+├── 检查python环境.py                       #环境检查：PyTorch/CUDA/ultralytics 版本
+├── 1.数据集预处理.py                       #数据集去重（MD5 哈希）
+├── 2.图片读取.py                           #任务1：数据加载、标注可视化、统计分析
+├── 3.数据集分类.py                         #数据集划分与 YOLO 格式导出
+├── 4.1yolo模型构建YOLOv8_small.py          #任务2：YOLOv8s 训练与评估
+├── 4.2yolo模型构建YOLOv8_m.py              #任务2：YOLOv8m 训练与评估
+├── 5.yolo模型调用.py                       #已训练模型推理与评估
+├── 6.测试集可视化.py                       #测试集导入 YOLO 目录工具
+├── 要求.txt                                #作业要求说明
+├── RFDD_datasets/                          #原始数据集（含占位符）
+│   ├── train&val/                              #- 训练+验证集（HDF5 格式）
+│   └── test/                                   #- 测试集（PNG + YOLO TXT）
+├── Data_Prep/                              #预处理后数据（含占位符）
+│   ├── RFDD_clean/                             #- 去重后的 H5 数据
+│   └── RFDD_Grouping/                          #- YOLO 格式数据集（train/val/test）
+│       ├── RFDD.yaml                               #YOLO 训练配置文件
+│       ├── images/                                 #PNG 图像
+│       └── labels/                                 #YOLO 格式 TXT 标注
+├── outputs_task1/                          #任务1 输出（可视化图表，运行脚本后自动生成内容）
+│   ├── vis_boxes_Train.png                     #训练集标注框可视化（5 张）
+│   ├── vis_boxes_Val.png                       #验证集标注框可视化（5 张）
+│   ├── vis_boxes_Test.png                      #测试集标注框可视化（5 张）
+│   ├── class_distribution.png                  #全类别分布柱状图
+│   ├── class_distribution_defects_only.png     #缺陷类分布柱状图（剔除 Normal）
+│   └── bbox_area_histogram.png                 #边界框面积分布直方图
+├── outputs_task2_yolov8s/                  #YOLOv8s 训练输出（运行脚本后自动生成内容）
+│   ├── predictions/                            #测试集检测结果
+│   ├── runs_s/yolov8s_rfdd/                    #训练后生成的权重与指标
+│   ├── log_yolov8s_yyyymmdd_hhmmss.txt         #训练日志
+│   └── training_curves.png                     #训练曲线
+├── outputs_task2_yolov8m/                  #YOLOv8m 训练输出（运行脚本后自动生成内容）
+│   ├── predictions/                            #测试集检测结果
+│   ├── runs_m/yolov8m_rfdd/                    #训练后生成的权重与指标
+│   ├── log_yolov8m_yyyymmdd_hhmmss.txt         #训练日志
+│   └── training_curves.png                     #训练曲线
+├── yolov8s.pt                              #YOLOv8s COCO 预训练权重（运行脚本后自动下载）
+├── yolov8m.pt                              #YOLOv8m COCO 预训练权重（运行脚本后自动下载）
+└── yolo26n.pt                              #YOLOv26n 预训练权重（运行脚本后自动下载）
 ```
 
 ---
