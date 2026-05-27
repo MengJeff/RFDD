@@ -70,7 +70,9 @@ def check_environment():
     print("=" * 60)
 
     import torch
+    import torchvision
     print(f"  PyTorch 版本: {torch.__version__}")
+    print(f"  torchvision:  {torchvision.__version__}")
     print(f"  CUDA 可用:    {torch.cuda.is_available()}")
     if torch.cuda.is_available():
         print(f"  GPU 名称:     {torch.cuda.get_device_name(0)}")
