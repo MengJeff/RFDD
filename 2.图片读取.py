@@ -272,13 +272,13 @@ def plot_class_distribution(train_cnt, val_cnt, test_cnt, save_name="class_distr
                    "反装\nInverted", "正常\nNormal", "位移\nDisplaced"]
 
     fig, ax = plt.subplots(figsize=(12, 6))
-    bars1 = ax.bar(x - width, train_cnt, width, label='训练集 (Train)', color='#5470c6')
-    bars2 = ax.bar(x, val_cnt, width, label='验证集 (Val)', color='#91cc75')
-    bars3 = ax.bar(x + width, test_cnt, width, label='测试集 (Test)', color='#fac858')
+    bars1 = ax.bar(x - width, train_cnt, width, label='训练集', color='#5470c6')
+    bars2 = ax.bar(x, val_cnt, width, label='验证集', color='#91cc75')
+    bars3 = ax.bar(x + width, test_cnt, width, label='测试集', color='#fac858')
 
     ax.set_xlabel('类别', fontsize=13)
     ax.set_ylabel('目标数量', fontsize=13)
-    ax.set_title('类别分布柱状图 (Class Distribution)', fontsize=15)
+    ax.set_title('类别分布柱状图', fontsize=15)
     ax.set_xticks(x)
     ax.set_xticklabels(names_short, fontsize=10)
     ax.legend(fontsize=11)

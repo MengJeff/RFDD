@@ -1,6 +1,4 @@
 *.pt
-Data_Prep/
-Data_Prep/RFDD_Grouping/RFDD.yaml
 outputs_task1/
 outputs_task2_yolov8m/
 outputs_task2_yolov8s/
