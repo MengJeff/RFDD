@@ -1,10 +1,12 @@
 *.pt
+*.pyc
 Data_Prep/
 outputs_task1/
 outputs_task2_yolov8m/
 outputs_task2_yolov8s/
 outputs_task3_fasterrcnn_resnet50_fpn_v2/
 outputs_task3_retinanet_resnet50_fpn_v2/
+__pycache__/
 RFDD_datasets/test/
 RFDD_datasets/train&val/
 .vscode/

@@ -464,6 +464,223 @@ def compute_pr(all_preds, all_gts, num_classes, conf_thresh=0.25, iou_thresh=0.5
     return P, R, p_per_class, r_per_class
 
 
+def _match_class_predictions(pred_items, gt_boxes_dict, iou_thresh):
+    """按置信度从高到低匹配单个类别的预测框与真实框。"""
+    import torch
+    from torchvision.ops import box_iou
+
+    pred_items = sorted(pred_items, key=lambda x: x[2], reverse=True)
+    tp = torch.zeros(len(pred_items), dtype=torch.float32)
+    fp = torch.zeros(len(pred_items), dtype=torch.float32)
+    scores = torch.tensor([item[2] for item in pred_items], dtype=torch.float32)
+    gt_matched = {
+        img_id: torch.zeros(len(boxes), dtype=torch.bool)
+        for img_id, boxes in gt_boxes_dict.items()
+    }
+
+    for i, (img_id, box, _) in enumerate(pred_items):
+        gt_boxes = gt_boxes_dict.get(img_id, torch.zeros(0, 4))
+        if len(gt_boxes) == 0:
+            fp[i] = 1
+            continue
+        ious = box_iou(box.unsqueeze(0), gt_boxes)[0]
+        max_iou, max_idx = ious.max(0)
+        if max_iou >= iou_thresh and not gt_matched[img_id][max_idx]:
+            tp[i] = 1
+            gt_matched[img_id][max_idx] = True
+        else:
+            fp[i] = 1
+
+    return scores, tp, fp
+
+
+def plot_confusion_matrix(all_preds, all_gts, num_classes, conf_thresh=0.25, iou_thresh=0.5):
+    """绘制混淆矩阵与归一化混淆矩阵，格式接近 Ultralytics 输出。"""
+    import torch
+    from torchvision.ops import box_iou
+
+    size = num_classes + 1
+    matrix = np.zeros((size, size), dtype=np.int64)
+    bg = num_classes
+
+    for pred, gt in zip(all_preds, all_gts):
+        pred_keep = pred["scores"] >= conf_thresh
+        pred_boxes = pred["boxes"][pred_keep]
+        pred_labels = pred["labels"][pred_keep]
+        pred_scores = pred["scores"][pred_keep]
+
+        valid_pred = (pred_labels >= 1) & (pred_labels <= num_classes)
+        pred_boxes = pred_boxes[valid_pred]
+        pred_labels = pred_labels[valid_pred]
+        pred_scores = pred_scores[valid_pred]
+
+        order = torch.argsort(pred_scores, descending=True)
+        pred_boxes = pred_boxes[order]
+        pred_labels = pred_labels[order]
+
+        gt_boxes = gt["boxes"]
+        gt_labels = gt["labels"]
+        valid_gt = (gt_labels >= 1) & (gt_labels <= num_classes)
+        gt_boxes = gt_boxes[valid_gt]
+        gt_labels = gt_labels[valid_gt]
+        gt_matched = torch.zeros(len(gt_boxes), dtype=torch.bool)
+
+        for p_box, p_label in zip(pred_boxes, pred_labels):
+            pred_cls = int(p_label.item()) - 1
+            if len(gt_boxes) == 0:
+                matrix[bg, pred_cls] += 1
+                continue
+
+            ious = box_iou(p_box.unsqueeze(0), gt_boxes)[0]
+            max_iou, max_idx = ious.max(0)
+            if max_iou >= iou_thresh and not gt_matched[max_idx]:
+                true_cls = int(gt_labels[max_idx].item()) - 1
+                matrix[true_cls, pred_cls] += 1
+                gt_matched[max_idx] = True
+            else:
+                matrix[bg, pred_cls] += 1
+
+        for g_label, matched in zip(gt_labels, gt_matched):
+            if not matched:
+                true_cls = int(g_label.item()) - 1
+                matrix[true_cls, bg] += 1
+
+    labels = CLASS_NAMES_EN + ["Background"]
+    for data, name, title, fmt in [
+        (matrix, "confusion_matrix.png", "Confusion Matrix", "d"),
+        (
+            matrix / np.maximum(matrix.sum(axis=1, keepdims=True), 1),
+            "confusion_matrix_normalized.png",
+            "Normalized Confusion Matrix",
+            ".2f",
+        ),
+    ]:
+        fig, ax = plt.subplots(figsize=(9, 7))
+        im = ax.imshow(data, cmap="Blues")
+        fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
+        ax.set_title(title)
+        ax.set_xlabel("Predicted")
+        ax.set_ylabel("True")
+        ax.set_xticks(np.arange(size))
+        ax.set_yticks(np.arange(size))
+        ax.set_xticklabels(labels, rotation=45, ha="right")
+        ax.set_yticklabels(labels)
+
+        threshold = data.max() * 0.55 if data.size else 0
+        for i in range(size):
+            for j in range(size):
+                value = data[i, j]
+                text = format(value, fmt)
+                color = "white" if value > threshold else "black"
+                ax.text(j, i, text, ha="center", va="center", color=color, fontsize=8)
+
+        plt.tight_layout()
+        save_path = RESULT_DIR / name
+        plt.savefig(save_path, dpi=150, bbox_inches="tight")
+        plt.close(fig)
+        print(f"  已保存: {save_path}")
+
+
+def plot_pr_and_confidence_curves(all_preds, all_gts, num_classes, iou_thresh=0.5):
+    """绘制 BoxPR/P/R/F1 曲线，文件命名仿照 Ultralytics。"""
+    recall_grid = np.linspace(0, 1, 101)
+    conf_grid = np.linspace(0, 1, 101)
+    pr_interp = []
+    p_conf_interp = []
+    r_conf_interp = []
+    f1_conf_interp = []
+
+    fig_pr, ax_pr = plt.subplots(figsize=(8, 6))
+    fig_p, ax_p = plt.subplots(figsize=(8, 6))
+    fig_r, ax_r = plt.subplots(figsize=(8, 6))
+    fig_f1, ax_f1 = plt.subplots(figsize=(8, 6))
+
+    for c in range(1, num_classes + 1):
+        pred_items = []
+        gt_boxes_dict = {}
+        gt_total = 0
+
+        for img_id, (pred, gt) in enumerate(zip(all_preds, all_gts)):
+            pred_mask = pred["labels"] == c
+            for box, score in zip(pred["boxes"][pred_mask], pred["scores"][pred_mask]):
+                pred_items.append((img_id, box, float(score.item())))
+
+            gt_mask = gt["labels"] == c
+            gt_boxes = gt["boxes"][gt_mask]
+            gt_boxes_dict[img_id] = gt_boxes
+            gt_total += len(gt_boxes)
+
+        scores, tp, fp = _match_class_predictions(pred_items, gt_boxes_dict, iou_thresh)
+        name = CLASS_NAMES_EN[c - 1]
+
+        if len(scores) == 0 or gt_total == 0:
+            precision = np.array([0.0])
+            recall = np.array([0.0])
+            conf = np.array([1.0])
+        else:
+            tp_cum = np.cumsum(tp.numpy())
+            fp_cum = np.cumsum(fp.numpy())
+            precision = tp_cum / np.maximum(tp_cum + fp_cum, 1e-9)
+            recall = tp_cum / max(gt_total, 1)
+            conf = scores.numpy()
+
+        ax_pr.plot(recall, precision, linewidth=1.5, label=name)
+        pr_interp.append(np.interp(recall_grid, recall, precision, left=precision[0], right=0))
+
+        order = np.argsort(conf)
+        conf_sorted = conf[order]
+        p_sorted = precision[order]
+        r_sorted = recall[order]
+        f1_sorted = 2 * p_sorted * r_sorted / np.maximum(p_sorted + r_sorted, 1e-9)
+
+        p_curve = np.interp(conf_grid, conf_sorted, p_sorted, left=p_sorted[0], right=0)
+        r_curve = np.interp(conf_grid, conf_sorted, r_sorted, left=r_sorted[0], right=0)
+        f1_curve = np.interp(conf_grid, conf_sorted, f1_sorted, left=f1_sorted[0], right=0)
+
+        p_conf_interp.append(p_curve)
+        r_conf_interp.append(r_curve)
+        f1_conf_interp.append(f1_curve)
+        ax_p.plot(conf_grid, p_curve, linewidth=1.2, label=name)
+        ax_r.plot(conf_grid, r_curve, linewidth=1.2, label=name)
+        ax_f1.plot(conf_grid, f1_curve, linewidth=1.2, label=name)
+
+    if pr_interp:
+        ax_pr.plot(recall_grid, np.mean(pr_interp, axis=0), color="black", linewidth=3, label="all classes")
+    if p_conf_interp:
+        ax_p.plot(conf_grid, np.mean(p_conf_interp, axis=0), color="black", linewidth=3, label="all classes")
+    if r_conf_interp:
+        ax_r.plot(conf_grid, np.mean(r_conf_interp, axis=0), color="black", linewidth=3, label="all classes")
+    if f1_conf_interp:
+        ax_f1.plot(conf_grid, np.mean(f1_conf_interp, axis=0), color="black", linewidth=3, label="all classes")
+
+    for ax, xlabel, ylabel, title in [
+        (ax_pr, "Recall", "Precision", f"Precision-Recall Curve (IoU={iou_thresh:.2f})"),
+        (ax_p, "Confidence", "Precision", "Precision-Confidence Curve"),
+        (ax_r, "Confidence", "Recall", "Recall-Confidence Curve"),
+        (ax_f1, "Confidence", "F1", "F1-Confidence Curve"),
+    ]:
+        ax.set_xlabel(xlabel)
+        ax.set_ylabel(ylabel)
+        ax.set_title(title)
+        ax.set_xlim(0, 1)
+        ax.set_ylim(0, 1)
+        ax.grid(alpha=0.3)
+        ax.legend(fontsize=8)
+
+    for fig, name in [
+        (fig_pr, "BoxPR_curve.png"),
+        (fig_p, "BoxP_curve.png"),
+        (fig_r, "BoxR_curve.png"),
+        (fig_f1, "BoxF1_curve.png"),
+    ]:
+        plt.figure(fig.number)
+        plt.tight_layout()
+        save_path = RESULT_DIR / name
+        fig.savefig(save_path, dpi=150, bbox_inches="tight")
+        plt.close(fig)
+        print(f"  已保存: {save_path}")
+
+
 def evaluate_test(model, device):
     """在测试集上评估：mAP / 检测结果图 / 训练曲线"""
     import torch
@@ -524,6 +741,11 @@ def evaluate_test(model, device):
     for cid in range(NUM_CLASSES):
         name = CLASS_NAMES_EN[cid]
         print(f"  {name:<16s} {p_per_class[name]:>10.4f}  {r_per_class[name]:>10.4f}")
+
+    # ----- 混淆矩阵与 PR / P / R / F1 曲线 -----
+    print(f"\n  绘制混淆矩阵与 PR 曲线...")
+    plot_confusion_matrix(all_preds, all_gts, NUM_CLASSES)
+    plot_pr_and_confidence_curves(all_preds, all_gts, NUM_CLASSES)
 
     # ----- 保存检测结果图 -----
     print(f"\n  保存检测结果图...")
