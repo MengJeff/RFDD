@@ -130,15 +130,13 @@ conda install h5py matplotlib numpy pillow
 
 # 实验流程
 
-## 步骤 0：检查python环境```bash
-
-python 1.数据集预处理.py
+## 步骤 0：检查python环境
 
 ```bash
 python 0.检查python环境.py
 ```
 
-根据控制台输出的提示完成相应操作即可。
+再根据控制台输出的提示完成相应操作即可。
 
 ## 步骤 1：数据集预处理（去重）
 
